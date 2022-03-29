@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!--Halaman telah memberi informasi untuk melakukan pengkodean karakter sesuai ketentuan UTF-8-->
+        <meta charset="utf-8" />
+        <!--Nama website yang akan ditampilkan -->
+        <title>MODIFIKASI GAME 1</title>
+        <!--Bagian pemberian style/css guna mempercantik website-->
+        <style>
+            /*pemberian style pada body*/
+            body {
+                height: 100%;
+                width: 100%;
+                margin: 0;
+                background: #6efa43;
+            }
+
+            /*pemberian style pada kelas container yang digunakan sebagai tempat untuk bermain game*/
+            #container {
+                position: relative;
+                height: 400px;
+                width: 90%;
+                border: 2px solid #ff0e0e;
+                background-image: url(bg.jpg);
+                margin-left: 4%;
+                overflow: hidden;
+            }
+
+            /*pemberian style pada kelas bird yang digunakan sebagai model yang dijalankan oleh pemain,
+            disini saya menggunakan animasi angry bird*/
+            #bird {
+                position: absolute;
+                background: url('img.png');
+                height: 42px;
+                width: 65px;
+                background-size: contain;
+                background-repeat: no-repeat;
+                top: 20%;
+                left: 15%;
+            }
+
+            /*pemberian style pada kelas pole yang digunakan sebagai rintangan dalam game*/
+            .pole {
+                position: absolute;
+                height: 130px;
+                width: 50px;
+                background-color: red;
+                right: -50px;
+            }
+
+            /*pemberian style pada kelas pole sebagai rintangan bagian atas*/
+            #pole_1 {
+                top: 0;
+            }
+
+            /*pemberian style pada kelas pole sebagai rintangan bagian bawah*/
+            #pole_2 {
+                bottom: 0;
+            }
+
+            /*pemberian style pada kelas score_div yang digunakan untuk menampilkan hasil 
+            score dan juga speed*/
+            #score_div {
+                text-align: center;
+                font-size: 40px;
+            }
+
+            /*pemberian style pada kelas restart_btn yang berfungsi sebagai tombol restart*/
+            #restart_btn {
+                position: absolute;
+                top: 0;
+                width: 100%;
+                padding: 20px;
+                background-color: #ff0505;
+                color: white;
+                font-size: 35px;
+                border: none;
+                cursor: pointer;
+                display: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <!--div sebagai generik blok konten yang dapat digunakan sebagai penampung
+        untuk mengelompokkan beberapa elemen menjadi satu-->
+
+        <!--pada bagian ini, kita buat div container yang berisikan bahan utama yang
+        dibutuhkan, seperti burung dan rintangan-->
+        <div id="container">
+
+            <div id="bird"></div>
+
+            <div id="pole_1" class="pole"></div>
+            <div id="pole_2" class="pole"></div>
+
+        </div>
+
+        <!--pada bagian ini, kita buat kelas score_div yang berisikan nilai score dan
+        kecepatan burung melaju-->
+        <div id="score_div">
+            <p><b>Score: </b><span id="score">0</span></p>
+            <p><b>Speed: </b><span id="speed">10</span></p>
+        </div>
+
+        <!--button restart digunakan untuk membuat tombol restart untuk memulai ulang game-->
+        <button id="restart_btn">Restart</button>
+
+        <!--penggunaan javascript-->
+        <script src="jquery-3.6.0.min.js"></script>
+        <script>
+            //inisialisasi pertama javascript
+            $(function () {
+            //digunakan untuk menyimpan objek yang diperlukan ke dalam variabel
+            var container = $('#container');
+            var bird = $('#bird');
+            var pole = $('.pole');
+            var pole_1 = $('#pole_1');
+            var pole_2 = $('#pole_2');
+            var score = $('#score');
+            var speed_span = $('#speed');
+            var restart_btn = $('#restart_btn');
+
+            //digunakan untuk menyimpan beberapa pengaturan dengan mengubah string menjadi angka atau bilangaan bulat
+            var container_width = parseInt(container.width());
+            var container_height = parseInt(container.height());
+            var pole_initial_position = parseInt(pole.css('right'));
+            var pole_initial_height = parseInt(pole.css('height'));
+            var bird_left = parseInt(bird.css('left'));
+            var bird_height = parseInt(bird.height());
+            var speed = 10;
+
+            //beberapa deklarasi lainnya dengan menggunakan tipe data boolean 
+            var go_up = false;
+            var score_updated = false;
+            var game_over = false;
+
+            //digunakan untuk mengulang rintangan yang dibuat dalam game secara terus menerus selama halaman dibuka dan berhenti ketika burung mengenai rintangan
+            var the_game = setInterval(function () {
+
+                if (collision(bird, pole_1) || collision(bird, pole_2) || parseInt(bird.css('top')) <= 0 || parseInt(bird.css('top')) > container_height - bird_height) {
+
+                    stop_the_game();
+
+                } else {
+
+                    var pole_current_position = parseInt(pole.css('right'));
+
+                    //digunakan untuk memperbarui skor ketika rintangan berhasil dilewati oleh burung
+                    if (pole_current_position > container_width - bird_left) {
+                        if (score_updated === false) {
+                            score.text(parseInt(score.text()) + 1);
+                            score_updated = true;
+                        }
+                    }
+
+                    //digunakan untuk memeriksa apakah burung telah berhasil melalui rintangan atau tidak
+                    if (pole_current_position > container_width) {
+                        var new_height = parseInt(Math.random() * 100);
+
+                        //mengubah tinggi rintangan, sehingga memberikan ukuran rintangan yang berbeda-beda setiap kali burung melewati rintangan
+                        pole_1.css('height', pole_initial_height + new_height);
+                        pole_2.css('height', pole_initial_height - new_height);
+
+                        //menambah  kecepatan burung melaju sebanyak 1 tingkatan kecepatan, ketika setiap kali burung berhasil melewati rintangan
+                        speed = speed + 1;
+                        speed_span.text(speed);
+
+                        score_updated = false;
+
+                        pole_current_position = pole_initial_position;
+                    }
+
+                    //digunakan untuk memindahkan posisi tiang sehingga jika semakin banyak perolehan rintangan yaang telah dilalui, maka semakin dekat pula jarak antar rintangan
+                    pole.css('right', pole_current_position + speed);
+
+                    if (go_up === false) {
+                        go_down();
+                    }
+                }
+
+            }, 40);
+
+            $(document).on('keydown', function (e) {
+                var key = e.keyCode;
+                if (key === 32 && go_up === false && game_over === false) {
+                    go_up = setInterval(up, 50);
+                }
+            });
+
+            //digunakan agar burung dapat digerakkan secara melambung
+            $(document).on('keyup', function (e) {
+                var key = e.keyCode;
+                if (key === 32) {
+                    clearInterval(go_up);
+                    go_up = false;
+                }
+            });
+
+            //fungsi agar burung dapat turun ke bawah ketika tombol spasi tidak ditekan
+            function go_down() {
+                bird.css('top', parseInt(bird.css('top')) + 5);
+            }
+
+            //fungsi agar burung dapat naik ketika tombol spasi ditekan
+            function up() {
+                bird.css('top', parseInt(bird.css('top')) - 10);
+            }
+
+            //fungsi untuk menampilkan tombol restart ketika game telah berakhir dan menghapus interval yang telah tercatat
+            function stop_the_game() {
+                clearInterval(the_game);
+                game_over = true;
+                restart_btn.slideDown();
+            }
+
+            //mengaktifkan tombol restart agar sesuai dengan fungsinya 
+            restart_btn.click(function () {
+                location.reload();
+            });
+
+            //kesulurahan fungsi dan tombol ditampilkan dalam game sehingga game siap digunakan 
+            function collision($div1, $div2) {
+                var x1 = $div1.offset().left;
+                var y1 = $div1.offset().top;
+                var h1 = $div1.outerHeight(true);
+                var w1 = $div1.outerWidth(true);
+                var b1 = y1 + h1;
+                var r1 = x1 + w1;
+                var x2 = $div2.offset().left;
+                var y2 = $div2.offset().top;
+                var h2 = $div2.outerHeight(true);
+                var w2 = $div2.outerWidth(true);
+                var b2 = y2 + h2;
+                var r2 = x2 + w2;
+
+                if (b1 < y2 || y1 > b2 || r1 < x2 || x1 > r2) return false;
+                return true;
+            }
+            });
+        </script>
+    </body>
+</html>
